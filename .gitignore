@@ -1,2 +1,32 @@
-.github/
-data
+# PyCharm
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+*.venv
+env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Data files (if you don't want to version control your data)
+*.csv
+*.xlsx
+
+# Model files (if you don't want to version control your trained models)
+*.pkl
+*.h5
+
+# Pipenv
+Pipfile.lock
