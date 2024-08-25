@@ -13,4 +13,4 @@ RUN pipenv install --system --deploy
 
 COPY . .
 
-CMD ["python", "scripts/train.py"]
+CMD ["python", "main.py"]
