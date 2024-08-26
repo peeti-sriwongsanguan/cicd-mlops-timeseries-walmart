@@ -1,14 +1,11 @@
 import pandas as pd
-import os
-import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import TimeSeriesSplit
 
 
-
 # Load and preprocess the data
 def load_and_preprocess_data(file_path):
-    data = pd.read_csv(file_path).iloc[:,1:]
+    data = pd.read_csv(file_path).iloc[:, 1:]
     data['Date'] = pd.to_datetime(data['Date'])
     data.set_index('Date', inplace=True)
 
@@ -50,4 +47,3 @@ def split_data(data, target_col='Weekly_Sales', test_size=0.2):
     X_test_scaled = scaler.transform(X_test)
 
     return X_train_scaled, X_test_scaled, y_train, y_test, scaler
-

@@ -1,13 +1,12 @@
 from sklearn.metrics import mean_squared_error
 import statsmodels.api as sm
-
-
 import xgboost as xgb
 import torch
 import torch.nn as nn
 # import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import optuna
+
 
 # ARIMA Model
 def fit_arima(y_train, y_test):
@@ -16,6 +15,7 @@ def fit_arima(y_train, y_test):
     arima_pred = arima_result.forecast(steps=len(y_test))
     arima_mse = mean_squared_error(y_test, arima_pred)
     return arima_mse, arima_pred
+
 
 # SARIMA Model
 def fit_sarima(y_train, y_test):
@@ -76,6 +76,7 @@ def prepare_dl_data(X_train, X_test, y_train, y_test, batch_size=64):
 def get_device():
     return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+
 def train_model(model, train_loader, criterion, optimizer, epochs=10):
     device = get_device()
     model.to(device)
@@ -115,8 +116,6 @@ class LSTMModel(nn.Module):
         out, _ = self.lstm(x.unsqueeze(1), (h_0, c_0))
         out = self.fc(out[:, -1, :])
         return out
-
-
 
 
 # CNN Model

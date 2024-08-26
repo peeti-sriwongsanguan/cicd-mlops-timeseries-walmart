@@ -1,8 +1,8 @@
 import os
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 from scipy import stats
+
 
 def save_plot(filename):
     directory = "image"
@@ -13,6 +13,7 @@ def save_plot(filename):
         os.remove(filepath)
     plt.savefig(filepath)
     print(f"Plot saved to {filepath}")
+
 
 def plot_predictions_vs_actual(y_true, y_pred, model_name):
     plt.figure(figsize=(10, 6))
@@ -44,6 +45,7 @@ def plot_residuals(y_true, y_pred, model_name):
     plt.title(f'{model_name}: Residual Distribution')
     save_plot(f'{model_name.lower()}_residuals.png')
     plt.close()
+
 
 def plot_feature_importance(model, feature_names, model_name):
     if hasattr(model, 'feature_importances_'):
