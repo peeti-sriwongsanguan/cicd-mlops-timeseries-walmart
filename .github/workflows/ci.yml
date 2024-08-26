@@ -25,3 +25,8 @@ jobs:
     - name: Run linting
       run: |
         pipenv run flake8 src/
+    - name: Upload plot artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: plots
+        path: image/
