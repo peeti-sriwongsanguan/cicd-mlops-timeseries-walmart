@@ -12,6 +12,8 @@ torch = "*"
 matplotlib = "*"
 seaborn = "*"
 mlflow = "*"
+statsmodels = "*"
+optuna = "*"
 
 [dev-packages]
 pytest = "*"

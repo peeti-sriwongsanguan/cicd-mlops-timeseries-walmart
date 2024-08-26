@@ -284,7 +284,7 @@ def optimize_cnn(X_train, y_train, X_test, y_test):
     save_plot('cnn_loss_plot.png')
     plt.close()
 
-    # Evaluate on test set
+    # Evaluate on tests set
     best_model.eval()
     with torch.no_grad():
         y_pred = best_model(X_test_tensor).cpu().numpy()
