@@ -82,7 +82,14 @@ pipenv shell
 docker build -t walmart-sales-forecast .
 ```
 ![2024-08-25_21-44-45 (1).gif](image%2F2024-08-25_21-44-45%20%281%29.gif)
-2. Run the container:
+
+2.1. Run the container that also create and save image in the image folder 
+
+This command mounts the image directory from your current working directory to /app/image in the container.
+```
+docker run -v $(pwd)/image:/app/image walmart-sales-forecast
+```
+2.2. Otherwise, use this command to run the container:
 ```
 docker run walmart-sales-forecast
 ```
