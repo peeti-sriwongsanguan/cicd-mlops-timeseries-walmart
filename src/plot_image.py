@@ -36,13 +36,23 @@ def plot_predictions_vs_actual(y_true, y_pred, model_name):
 
 def plot_residuals(y_true, y_pred, model_name):
     try:
-        residuals = (y_true - y_pred).flatten()  # Ensure it's a flat numpy array
+        # Convert to numpy arrays if they're not already
+        y_true = y_true.values if hasattr(y_true, 'values') else np.array(y_true)
+        y_pred = y_pred.values if hasattr(y_pred, 'values') else np.array(y_pred)
+
+        residuals = y_true - y_pred
+
         plt.figure(figsize=(10, 6))
+
+        # Plot histogram
         n, bins, patches = plt.hist(residuals, bins=30, density=True, alpha=0.7)
+
+        # Add a kernel density estimate
         kde = stats.gaussian_kde(residuals)
         x = np.linspace(residuals.min(), residuals.max(), 100)
         p = kde(x)
         plt.plot(x, p, 'k', linewidth=2)
+
         plt.xlabel('Residuals')
         plt.ylabel('Density')
         plt.title(f'{model_name}: Residual Distribution')

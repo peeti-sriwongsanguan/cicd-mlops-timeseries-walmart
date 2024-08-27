@@ -1,28 +1,45 @@
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 import statsmodels.api as sm
 import xgboost as xgb
 import torch
 import torch.nn as nn
-# import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import optuna
+import mlflow
+import mlflow.statsmodels
+import mlflow.xgboost
+import mlflow.pytorch
 
 
 # ARIMA Model
 def fit_arima(y_train, y_test):
-    arima_model = sm.tsa.ARIMA(y_train, order=(5, 1, 0))
-    arima_result = arima_model.fit()
-    arima_pred = arima_result.forecast(steps=len(y_test))
-    arima_mse = mean_squared_error(y_test, arima_pred)
+    with mlflow.start_run(run_name="ARIMA"):
+        arima_model = sm.tsa.ARIMA(y_train, order=(5, 1, 0))
+        arima_result = arima_model.fit()
+        arima_pred = arima_result.forecast(steps=len(y_test))
+        arima_mse = mean_squared_error(y_test, arima_pred)
+        arima_r2 = r2_score(y_test, arima_pred)
+
+        mlflow.log_params({"order": (5, 1, 0)})
+        mlflow.log_metrics({"mse": arima_mse, "r2": arima_r2})
+        mlflow.statsmodels.log_model(arima_result, "arima_model")
+
     return arima_mse, arima_pred
 
 
 # SARIMA Model
 def fit_sarima(y_train, y_test):
-    sarima_model = sm.tsa.SARIMAX(y_train, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
-    sarima_result = sarima_model.fit()
-    sarima_pred = sarima_result.forecast(steps=len(y_test))
-    sarima_mse = mean_squared_error(y_test, sarima_pred)
+    with mlflow.start_run(run_name="SARIMA"):
+        sarima_model = sm.tsa.SARIMAX(y_train, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+        sarima_result = sarima_model.fit()
+        sarima_pred = sarima_result.forecast(steps=len(y_test))
+        sarima_mse = mean_squared_error(y_test, sarima_pred)
+        sarima_r2 = r2_score(y_test, sarima_pred)
+
+        mlflow.log_params({"order": (1, 1, 1), "seasonal_order": (1, 1, 1, 12)})
+        mlflow.log_metrics({"mse": sarima_mse, "r2": sarima_r2})
+        mlflow.statsmodels.log_model(sarima_result, "sarima_model")
+
     return sarima_mse, sarima_pred
 
 
@@ -48,11 +65,18 @@ def fit_xgboost(X_train, y_train, X_test, y_test):
     study = optuna.create_study(direction='minimize')
     study.optimize(lambda trial: objective(trial, X_train, y_train, X_test, y_test), n_trials=100)
 
-    best_params = study.best_params
-    xgb_model = xgb.XGBRegressor(**best_params)
-    xgb_model.fit(X_train, y_train)
-    xgb_pred = xgb_model.predict(X_test)
-    xgb_mse = mean_squared_error(y_test, xgb_pred)
+    with mlflow.start_run(run_name="XGBoost"):
+        best_params = study.best_params
+        xgb_model = xgb.XGBRegressor(**best_params)
+        xgb_model.fit(X_train, y_train)
+        xgb_pred = xgb_model.predict(X_test)
+        xgb_mse = mean_squared_error(y_test, xgb_pred)
+        xgb_r2 = r2_score(y_test, xgb_pred)
+
+        mlflow.log_params(best_params)
+        mlflow.log_metrics({"mse": xgb_mse, "r2": xgb_r2})
+        mlflow.xgboost.log_model(xgb_model, "xgboost_model")
+
     return xgb_mse, xgb_pred, xgb_model
 
 
@@ -72,7 +96,6 @@ def prepare_dl_data(X_train, X_test, y_train, y_test, batch_size=64):
     return train_loader, test_loader, X_test_tensor, y_test_tensor
 
 
-# Generic training function for PyTorch models
 def get_device():
     return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -89,9 +112,9 @@ def train_model(model, train_loader, criterion, optimizer, epochs=10):
             loss = criterion(output, y_batch)
             loss.backward()
             optimizer.step()
+        mlflow.log_metric("train_loss", loss.item(), step=epoch)
 
 
-# Generic evaluation function for PyTorch models
 def evaluate_model(model, X_test_tensor, y_test):
     device = get_device()
     model.to(device)
@@ -100,7 +123,8 @@ def evaluate_model(model, X_test_tensor, y_test):
         X_test_tensor = X_test_tensor.to(device)
         predictions = model(X_test_tensor).cpu().squeeze()
     mse = mean_squared_error(y_test, predictions.numpy())
-    return mse, predictions
+    r2 = r2_score(y_test, predictions.numpy())
+    return mse, r2, predictions
 
 
 # LSTM Model
@@ -159,3 +183,30 @@ class GRUModel(nn.Module):
         out, _ = self.gru(x.unsqueeze(1), h_0)
         out = self.fc(out[:, -1, :])
         return out
+
+
+# Function to train and evaluate PyTorch models with MLflow tracking
+def fit_pytorch_model(model_class, model_name, X_train, y_train, X_test, y_test, hidden_size=50, num_layers=2, lr=0.001,
+                      epochs=10):
+    with mlflow.start_run(run_name=model_name):
+        model = model_class(input_size=X_train.shape[1], hidden_size=hidden_size, num_layers=num_layers)
+        criterion = nn.MSELoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+        train_loader, _, X_test_tensor, _ = prepare_dl_data(X_train, X_test, y_train, y_test)
+
+        mlflow.log_params({
+            "hidden_size": hidden_size,
+            "num_layers": num_layers,
+            "learning_rate": lr,
+            "epochs": epochs
+        })
+
+        train_model(model, train_loader, criterion, optimizer, epochs)
+
+        mse, r2, predictions = evaluate_model(model, X_test_tensor, y_test)
+
+        mlflow.log_metrics({"mse": mse, "r2": r2})
+        mlflow.pytorch.log_model(model, f"{model_name.lower()}_model")
+
+    return mse, predictions, model
