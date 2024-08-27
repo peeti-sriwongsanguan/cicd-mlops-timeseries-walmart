@@ -140,7 +140,20 @@ python main.py
 ## Viewing Results in MLflow
 
 1. Ensure the MLflow tracking server is running.
+   This is how to run the server as a background process 
+   ```
+   nohup mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 0.0.0.0 --port 5001 > mlflow.log 2>&1 &
+   ```
+   
+   *Note:*
+   To stop the server later, you'll need to find its process ID and kill it:
+   ```
+   ps aux | grep mlflow
+   kill <process_id>
+   ```
+
 2. Open a web browser and navigate to http://localhost:5001.
+![MLflow scnsht.gif](image/MLflow%20scnsht.gif)
 3. In the MLflow UI:
    - View a list of all runs under the "Walmart Sales Forecast" experiment.
    - Click on individual runs to see detailed metrics, parameters, and artifacts.
