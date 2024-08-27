@@ -1,4 +1,4 @@
-# End-to-End MLOPS Workflows
+# CICD End-to-End MLOPS Workflows
 
 ## Walmart Sales Forecasting: XGBoost vs CNN
 This is a simple end-to-end mlops project which takes data from [Walmart stores](https://www.kaggle.com/datasets/ujjwalchowdhury/walmartcleaned) (special thanks to Ujjwal Chowdhury for the cleaned dataset) and transforms it with machine learning pipelines from training, model tracking and experimenting with Docker. For the models I compare XGBoost and CNN models for time series forecast.
@@ -93,3 +93,4 @@ docker run -v $(pwd)/image:/app/image walmart-sales-forecast
 ```
 docker run walmart-sales-forecast
 ```
+
