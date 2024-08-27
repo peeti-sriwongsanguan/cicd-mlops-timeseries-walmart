@@ -11,6 +11,9 @@ venv/
 *.venv
 env/
 
+# Environment variables
+.env
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
@@ -20,11 +23,11 @@ env/
 # Logs
 *.log
 
-# Data files (if you don't want to version control your data)
+# Data files
 *.csv
 *.xlsx
 
-# Model files (if you don't want to version control your trained models)
+# Model files
 *.pkl
 *.h5
 

@@ -11,6 +11,7 @@ COPY Pipfile Pipfile.lock ./
 # Install dependencies
 RUN pipenv install --system --deploy
 
+
 # Create image directory
 RUN mkdir -p /app/image
 
