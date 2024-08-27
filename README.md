@@ -3,9 +3,9 @@
 ## Walmart Sales Forecasting: Machine Learning vs Deep Learning
 ### Description
 This is a simple end-to-end mlops project which takes data from [Walmart stores](https://www.kaggle.com/datasets/ujjwalchowdhury/walmartcleaned) (special thanks to Ujjwal Chowdhury for the cleaned dataset) and transforms it with machine learning pipelines from training, model tracking and experimenting with Docker. 
-This project implements various time series forecasting models using PyTorch to predict the store sales, including ARIMA, SARIMA, XGBoost, and deep learning models (LSTM, CNN, RNN, GRU). It uses MLflow for experiment tracking and optionally Docker for environment consistency.
+This project implements various time series forecasting models using PyTorch to predict the store sales, including ARIMA, SARIMA, XGBoost, and deep learning models (LSTM, CNN, RNN, GRU). It uses [MLflow](https://mlflow.org/docs/latest/getting-started/intro-quickstart/index.html) for experiment tracking and optionally Docker for environment consistency.
 
-The project runs locally and uses AWS S3 buckets to store model artifacts during model tracking and experimenting with mlflow.
+The project runs locally and uses AWS S3 buckets to store model artifacts during model tracking and experimenting with MLflow.
 
 ### Dataset
 Available in Kaggle [Walmart stores](https://www.kaggle.com/datasets/ujjwalchowdhury/walmartcleaned), It contains economic conditions like the Consumer Price Index (CPI), unemployment rate (Unemployment Index, etc). 
@@ -93,7 +93,14 @@ AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_DEFAULT_REGION=your_aws_region
 ```
 
-#### 6. Make sure the Walmart dataset and place it in the data folder
+#### 6. Use a .env file (for local development):
+
+Install the python-dotenv package:
+```
+pipenv install python-dotenv
+```
+
+#### 7. Make sure the Walmart dataset and place it in the data folder
 
 
 ### Docker (optional)
