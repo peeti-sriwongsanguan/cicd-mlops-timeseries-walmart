@@ -6,6 +6,7 @@ import mlflow.sklearn
 import mlflow.xgboost
 import mlflow.pytorch
 import numpy as np
+import gc
 
 from src.mlflow_config import setup_mlflow, start_run
 from src.data_preprocessing import load_and_preprocess_data, split_data
@@ -19,17 +20,21 @@ import torch.nn as nn
 import torch.optim as optim
 import time
 import logging
+logging.basicConfig(level=logging.DEBUG)
+
 import pandas as pd
 
 pd.set_option('display.max_columns', None)
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from src.utils import timing_decorator
+
+
+OUTPUT_DIR = './output'
 
 
 class EnsembleModel:
@@ -46,11 +51,16 @@ class EnsembleModel:
             else:
                 # For PyTorch models
                 model.eval()
-                with torch.no_grad():
-                    pred = model(torch.FloatTensor(X)).cpu().numpy().squeeze()
+                batch_size = 1024  # Adjust based on memory constraints
+                all_preds = []
+                for i in range(0, len(X), batch_size):
+                    batch = torch.FloatTensor(X[i:i+batch_size])
+                    with torch.no_grad():
+                        pred = model(batch).cpu().numpy().squeeze()
+                    all_preds.append(pred)
+                pred = np.concatenate(all_preds)
             predictions.append(pred)
         return np.average(predictions, axis=0, weights=self.weights)
-
 
 @timing_decorator
 def create_ensemble(X_train, y_train, X_test, y_test, models):
@@ -60,10 +70,12 @@ def create_ensemble(X_train, y_train, X_test, y_test, models):
     print(f"Ensemble MSE: {mse}")
     return ensemble, mse
 
+def batch_generator(X, y, batch_size):
+    for i in range(0, len(X), batch_size):
+        yield X[i:i+batch_size], y[i:i+batch_size]
 
 @timing_decorator
 def main():
-    # Setup MLflow
     setup_mlflow()
 
     start_time = time.time()
@@ -77,26 +89,28 @@ def main():
     # Split data
     X_train, X_test, y_train, y_test, scaler = split_data(df)
 
-    # Store feature names
+    # Store feature names and free memory
     feature_names = df.columns.drop('Weekly_Sales').tolist()
+    del df
+    gc.collect()
 
     # Fit ARIMA and SARIMA models
-    with start_run("ARIMA"):
+    with start_run(experiment_name="ARIMA", run_name="ARIMA_Run"):
         arima_mse, arima_pred = fit_arima(y_train, y_test)
         mlflow.log_metric("mse", arima_mse)
 
-    with start_run("SARIMA"):
+    with start_run(experiment_name="SARIMA", run_name="SARIMA_Run"):
         sarima_mse, sarima_pred = fit_sarima(y_train, y_test)
         mlflow.log_metric("mse", sarima_mse)
 
     # Fit XGBoost model
-    with start_run("XGBoost"):
+    with start_run(experiment_name="XGBoost", run_name="XGBoost_Run"):
         xgb_mse, xgb_pred, xgb_model = fit_xgboost(X_train, y_train, X_test, y_test)
         mlflow.log_metric("mse", xgb_mse)
         mlflow.xgboost.log_model(xgb_model, "xgboost_model")
-        plot_predictions_vs_actual(y_test, xgb_pred, "XGBoost")
-        plot_residuals(y_test, xgb_pred, "XGBoost")
-        plot_feature_importance(xgb_model, feature_names, "XGBoost")
+        plot_predictions_vs_actual(y_test, xgb_pred, "XGBoost", output_dir=OUTPUT_DIR)
+        plot_residuals(y_test, xgb_pred, "XGBoost", output_dir=OUTPUT_DIR)
+        plot_feature_importance(xgb_model, feature_names, "XGBoost", output_dir=OUTPUT_DIR)
 
     # Prepare data for deep learning models
     train_loader, test_loader, X_test_tensor, y_test_tensor = prepare_dl_data(X_train, X_test, y_train, y_test)
@@ -118,6 +132,10 @@ def main():
             mlflow.pytorch.log_model(model, f"{name.lower()}_model")
             plot_predictions_vs_actual(y_test, predictions, name)
             plot_residuals(y_test, predictions, name)
+
+        # Clear GPU memory if using CUDA
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     # Create ensemble
     with start_run("Ensemble"):
@@ -141,7 +159,6 @@ def main():
 
     end_time = time.time()
     logging.info(f"Total runtime: {end_time - start_time:.2f} seconds")
-
 
 if __name__ == "__main__":
     main()

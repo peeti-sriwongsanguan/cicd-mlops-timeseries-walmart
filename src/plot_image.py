@@ -10,16 +10,14 @@ matplotlib.use('Agg')
 logging.basicConfig(level=logging.INFO)
 
 
-def save_plot(filename):
-    directory = "/app/image"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    filepath = os.path.join(directory, filename)
+def save_plot(filename, output_dir='./output'):
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, filename)
     plt.savefig(filepath)
-    logging.info(f"Plot saved to {filepath}")
+    print(f"Plot saved to {filepath}")
 
 
-def plot_predictions_vs_actual(y_true, y_pred, model_name):
+def plot_predictions_vs_actual(y_true, y_pred, model_name, output_dir='./output'):
     try:
         plt.figure(figsize=(10, 6))
         plt.scatter(y_true.values, y_pred, alpha=0.5)
@@ -27,14 +25,17 @@ def plot_predictions_vs_actual(y_true, y_pred, model_name):
         plt.xlabel('Actual Values')
         plt.ylabel('Predicted Values')
         plt.title(f'{model_name}: Predictions vs Actual')
-        save_plot(f'{model_name.lower()}_predictions_vs_actual.png')
+        save_plot(f'{model_name.lower()}_predictions_vs_actual.png', output_dir)
     except Exception as e:
         logging.error(f"Error in plot_predictions_vs_actual: {str(e)}")
+        logging.error(f"Current working directory: {os.getcwd()}")
+        logging.error(f"Output directory: {output_dir}")
+        logging.error(f"Is output directory writable? {os.access(output_dir, os.W_OK)}")
     finally:
         plt.close()
 
 
-def plot_residuals(y_true, y_pred, model_name):
+def plot_residuals(y_true, y_pred, model_name, output_dir='./output'):
     try:
         # Convert to numpy arrays if they're not already
         y_true = y_true.values if hasattr(y_true, 'values') else np.array(y_true)
@@ -56,14 +57,17 @@ def plot_residuals(y_true, y_pred, model_name):
         plt.xlabel('Residuals')
         plt.ylabel('Density')
         plt.title(f'{model_name}: Residual Distribution')
-        save_plot(f'{model_name.lower()}_residuals.png')
+        save_plot(f'{model_name.lower()}_residuals.png', output_dir)
     except Exception as e:
         logging.error(f"Error in plot_residuals: {str(e)}")
+        logging.error(f"Current working directory: {os.getcwd()}")
+        logging.error(f"Output directory: {output_dir}")
+        logging.error(f"Is output directory writable? {os.access(output_dir, os.W_OK)}")
     finally:
         plt.close()
 
 
-def plot_feature_importance(model, feature_names, model_name):
+def plot_feature_importance(model, feature_names, model_name, output_dir='./output'):
     try:
         if hasattr(model, 'feature_importances_'):
             importances = model.feature_importances_
@@ -73,16 +77,19 @@ def plot_feature_importance(model, feature_names, model_name):
             plt.bar(range(len(importances)), importances[indices])
             plt.xticks(range(len(importances)), [feature_names[i] for i in indices], rotation=90)
             plt.tight_layout()
-            save_plot(f'{model_name.lower()}_feature_importance.png')
+            save_plot(f'{model_name.lower()}_feature_importance.png', output_dir)
         else:
             logging.warning(f"Model {model_name} does not have feature_importances_ attribute")
     except Exception as e:
         logging.error(f"Error in plot_feature_importance: {str(e)}")
+        logging.error(f"Current working directory: {os.getcwd()}")
+        logging.error(f"Output directory: {output_dir}")
+        logging.error(f"Is output directory writable? {os.access(output_dir, os.W_OK)}")
     finally:
         plt.close()
 
 
-def plot_model_comparison(y_test, xgb_pred, cnn_pred, ensemble_pred):
+def plot_model_comparison(y_test, xgb_pred, cnn_pred, ensemble_pred, output_dir='./output'):
     try:
         plt.figure(figsize=(12, 6))
         arrays = [y_test, xgb_pred, cnn_pred, ensemble_pred]
@@ -95,8 +102,11 @@ def plot_model_comparison(y_test, xgb_pred, cnn_pred, ensemble_pred):
         plt.ylabel('Value')
         plt.title('Model Comparison: Actual vs Predictions')
         plt.legend()
-        save_plot('model_comparison.png')
+        save_plot('model_comparison.png', output_dir)
     except Exception as e:
         logging.error(f"Error in plot_model_comparison: {str(e)}")
+        logging.error(f"Current working directory: {os.getcwd()}")
+        logging.error(f"Output directory: {output_dir}")
+        logging.error(f"Is output directory writable? {os.access(output_dir, os.W_OK)}")
     finally:
         plt.close()
