@@ -54,6 +54,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    - name: Debug AWS CLI
+      run: |
+        aws --version
+        aws sts get-caller-identity
+
     - name: Train and log model
       run: |
         pipenv run python src/main.py
