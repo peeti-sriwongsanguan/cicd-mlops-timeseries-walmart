@@ -33,3 +33,4 @@ env/
 
 # Pipenv
 Pipfile.lockmlruns/
+mlruns/

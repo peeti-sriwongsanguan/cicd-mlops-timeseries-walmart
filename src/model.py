@@ -65,7 +65,6 @@ def fit_xgboost(X_train, y_train, X_test, y_test):
     study = optuna.create_study(direction='minimize')
     study.optimize(lambda trial: objective(trial, X_train, y_train, X_test, y_test), n_trials=100)
 
-
     best_params = study.best_params
     xgb_model = xgb.XGBRegressor(**best_params)
     xgb_model.fit(X_train, y_train)
@@ -196,11 +195,11 @@ def fit_pytorch_model(model_class, model_name, X_train, y_train, X_test, y_test,
     train_loader, _, X_test_tensor, _ = prepare_dl_data(X_train, X_test, y_train, y_test)
 
     mlflow.log_params({
-            "hidden_size": hidden_size,
-            "num_layers": num_layers,
-            "learning_rate": lr,
-            "epochs": epochs
-        })
+        "hidden_size": hidden_size,
+        "num_layers": num_layers,
+        "learning_rate": lr,
+        "epochs": epochs
+    })
 
     train_model(model, train_loader, criterion, optimizer, epochs)
 
